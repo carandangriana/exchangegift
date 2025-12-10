@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>GAME GAME — Fixed Assignments (Updated)</title>
+<title>GAME GAME</title>
 <style>
     body { font-family: Arial, sans-serif; text-align: center; background-color: #f0f0f0; padding: 20px; }
     h1 { font-size: 40px; }
@@ -26,7 +26,7 @@
 <h2>Participants:</h2>
 <ul id="participantList"></ul>
 
-<button id="drawBtn">HALUIN MO!!!</button>
+<button id="drawBtn">PINDUTIN MO AKO BEYBE</button>
 
 <!-- MODAL -->
 <div id="modal">
@@ -112,20 +112,20 @@ submitBtn.onclick = () => {
     resultText.textContent = "";
 
     if (!nameRaw) {
-        errorText.textContent = "Please enter your name.";
+        errorText.textContent = "Lagay mo lang name mo - complete ah, kagaya ng asa screen";
         return;
     }
     if (!participants.includes(name)) {
-        errorText.textContent = "Invalid name. Exact spelling required.";
+        errorText.textContent = "Invalid name. spelling mo mali";
         return;
     }
     if (used[name]) {
-        errorText.textContent = "You already checked your assignment on this device.";
+        errorText.textContent = "TAMA NA";
         return;
     }
     const pass = passwordInput.value;
     if (!pass) {
-        errorText.textContent = "Please enter your password.";
+        errorText.textContent = "Please your password.";
         return;
     }
     if (!credentials[name] || credentials[name] !== pass) {
@@ -161,3 +161,4 @@ passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') submi
 </script>
 </body>
 </html>
+
