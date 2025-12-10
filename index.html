@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GAME GAME — Fixed Assignments (Updated)</title>
+<style>
+    body { font-family: Arial, sans-serif; text-align: center; background-color: #f0f0f0; padding: 20px; }
+    h1 { font-size: 40px; }
+    ul { list-style-type: none; padding: 0; }
+    li { background-color: #db6ad7; margin: 5px; padding: 10px; border-radius: 5px; font-size: 20px; }
+    button { padding: 10px 20px; font-size: 18px; background-color: #4CAF50; color: white; border: none; cursor: pointer; margin-top: 20px; }
+    button:hover { background-color: #45a049; }
+    #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+    #modalContent { background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
+    #modal input { width: 90%; padding: 10px; margin-top: 10px; font-size: 18px; box-sizing: border-box; }
+    #result { font-size: 22px; margin-top: 20px; color: #ff6600; }
+    #error { color: red; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<h1>GAME GAME</h1>
+<p>SINO BIBIGYAN MO??? <b>ISANG BESES LANG ITO HA!! HAHAHA BAWAL MADAYA</b></p>
+
+<h2>Participants:</h2>
+<ul id="participantList"></ul>
+
+<button id="drawBtn">HALUIN MO!!!</button>
+
+<!-- MODAL -->
+<div id="modal">
+    <div id="modalContent">
+        <h2>Enter your name and password</h2>
+        <input type="text" id="nameInput" placeholder="Enter your name (exact spelling)">
+        <input type="password" id="passwordInput" placeholder="Enter your password">
+        <button id="submitName">Submit</button>
+        <p id="error"></p>
+        <p id="result"></p>
+    </div>
+</div>
+
+<script>
+/* ========== PARTICIPANTS & PASSWORDS ========== */
+const participants = ["RIANA","ROXANNE","AIRHA","KISHIA","CAMILLE","KAE","KRISTINA","BRICKS"];
+
+const credentials = {
+    "RIANA": "r123",
+    "ROXANNE": "roxpass",
+    "AIRHA": "a1rha",
+    "KISHIA": "kishi@2025",
+    "CAMILLE": "camillepw",
+    "KAE": "kae007",
+    "KRISTINA": "kristina!",
+    "BRICKS": "bricks_pw"
+};
+
+/* ========== FIXED ASSIGNMENTS (HARD-CODED) ========== */
+/* These assignments are final and identical on every device that opens this file */
+const assignments = {
+    "RIANA": "CAMILLE",
+    "CAMILLE": "KRISTINA",
+    "KISHIA": "RIANA",
+    "KRISTINA": "BRICKS",
+    "BRICKS": "ROXANNE",
+    "ROXANNE": "AIRHA",
+    "AIRHA": "KAE",
+    "KAE": "KISHIA"
+};
+
+/* ========== PER-DEVICE USED LOCK ========== */
+/* Keeps track of who already revealed on this device (stored in localStorage) */
+let used = JSON.parse(localStorage.getItem("used")) || {}; // e.g., { "RIANA": true }
+
+/* Save used state if changed */
+function saveUsed() {
+    localStorage.setItem("used", JSON.stringify(used));
+}
+
+/* ========== UI POPULATION ========== */
+const list = document.getElementById("participantList");
+participants.forEach(p => {
+    const li = document.createElement("li");
+    li.textContent = p;
+    list.appendChild(li);
+});
+
+const modal = document.getElementById("modal");
+const drawBtn = document.getElementById("drawBtn");
+const submitBtn = document.getElementById("submitName");
+const nameInput = document.getElementById("nameInput");
+const passwordInput = document.getElementById("passwordInput");
+const errorText = document.getElementById("error");
+const resultText = document.getElementById("result");
+
+drawBtn.onclick = () => {
+    modal.style.display = "flex";
+    errorText.textContent = "";
+    resultText.textContent = "";
+    nameInput.disabled = false;
+    passwordInput.disabled = false;
+    submitBtn.disabled = false;
+    nameInput.value = "";
+    passwordInput.value = "";
+    nameInput.focus();
+};
+
+submitBtn.onclick = () => {
+    const nameRaw = nameInput.value.trim();
+    const name = nameRaw.toUpperCase();
+    errorText.textContent = "";
+    resultText.textContent = "";
+
+    if (!nameRaw) {
+        errorText.textContent = "Please enter your name.";
+        return;
+    }
+    if (!participants.includes(name)) {
+        errorText.textContent = "Invalid name. Exact spelling required.";
+        return;
+    }
+    if (used[name]) {
+        errorText.textContent = "You already checked your assignment on this device.";
+        return;
+    }
+    const pass = passwordInput.value;
+    if (!pass) {
+        errorText.textContent = "Please enter your password.";
+        return;
+    }
+    if (!credentials[name] || credentials[name] !== pass) {
+        errorText.textContent = "Invalid password.";
+        return;
+    }
+
+    // Show the hard-coded result
+    resultText.textContent = "🎁 ANG BIBIGYAN MO AY SI ----  " + assignments[name];
+
+    // Mark as used (on THIS device)
+    used[name] = true;
+    saveUsed();
+
+    // Disable inputs on success
+    nameInput.disabled = true;
+    passwordInput.disabled = true;
+    submitBtn.disabled = true;
+
+    // Close modal shortly
+    setTimeout(() => { modal.style.display = "none"; }, 2000);
+};
+
+// Close modal if clicked outside content
+modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.style.display = 'none';
+});
+
+// Enter key convenience
+nameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') passwordInput.focus(); });
+passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') submitBtn.click(); });
+
+</script>
+</body>
+</html>
