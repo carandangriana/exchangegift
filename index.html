@@ -39,9 +39,9 @@
 </head>
 <body>
 
-<h1>GAME GAME</h1>
+<h1>Mag log in ka </h1>
 <p id="welcome"></p>
-<p>After seeing who you drew, click your assigned person to mark it (anonymous).</p>
+<p>After mo jan, click mo sino nabunot mo para makita namin na magkakaiba tayo ng nabunot, anonymous naman yan, just to make sure lang na iba iba talaga tayo and lahat ay nabunot</p>
 
 <div id="participantContainer"></div>
 <p id="assignment"></p>
@@ -84,9 +84,9 @@ participants.forEach(p => {
     buttons[p] = btn;
 
     btn.addEventListener("click", async () => {
-        if (!loggedInUser) { alert("Please log in first."); return; }
-        if (btn.disabled) { alert("This person has already been chosen."); return; }
-        if (assignments[loggedInUser] !== p) { alert("This is not your assigned person."); return; }
+        if (!loggedInUser) { alert("Log in muna hoy"); return; }
+        if (btn.disabled) { alert("Taken na sya, sorry ka"); return; }
+        if (assignments[loggedInUser] !== p) { alert("Nakalagay na ang nabunot mo,wag ka na pumindot ng iba HAHAHAA"); return; }
 
         // Mark locally
         btn.classList.add("chosen");
@@ -105,7 +105,7 @@ participants.forEach(p => {
                 fetchChosenStatus();
             }
         } catch(err) {
-            alert("Someone else may have picked this already.");
+            alert("taken na ");
         }
     });
 
