@@ -1,165 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GAME GAME</title>
 <style>
     body { font-family: Arial, sans-serif; text-align: center; background-color: #f0f0f0; padding: 20px; }
-    h1 { font-size: 40px; }
-    ul { list-style-type: none; padding: 0; }
-    li { background-color: #db6ad7; margin: 5px; padding: 10px; border-radius: 5px; font-size: 20px; }
-    button { padding: 10px 20px; font-size: 18px; background-color: #4CAF50; color: white; border: none; cursor: pointer; margin-top: 20px; }
-    button:hover { background-color: #45a049; }
-    #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+    h1 { font-size: 40px; margin-bottom: 10px; }
+    #welcome { font-size: 20px; margin-bottom: 10px; color: #333; }
+    .participant-btn {
+        display: block;
+        width: 250px;
+        margin: 10px auto;
+        padding: 15px;
+        font-size: 20px;
+        background-color: #db6ad7;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        color: black;
+        transition: 0.3s;
+    }
+    .participant-btn.chosen { 
+        background-color: #888; 
+        text-decoration: line-through; 
+        color: white; 
+        cursor: not-allowed; 
+        pointer-events: none;
+    }
+    #modal { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
     #modalContent { background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
     #modal input { width: 90%; padding: 10px; margin-top: 10px; font-size: 18px; box-sizing: border-box; }
-    #result { font-size: 22px; margin-top: 20px; color: #ff6600; }
+    #submitName { margin-top: 15px; padding: 10px 20px; font-size: 18px; cursor: pointer; border-radius: 5px; border: none; background-color: #4CAF50; color: white; }
+    #submitName:hover { background-color: #45a049; }
+    #assignment { font-size: 22px; color: #ff6600; margin-top: 10px; font-weight: bold; }
     #error { color: red; margin-top: 10px; }
 </style>
 </head>
 <body>
 
 <h1>GAME GAME</h1>
-<p>SINO BIBIGYAN MO??? <b>ISANG BESES LANG ITO HA!! HAHAHA BAWAL MADAYA</b></p>
+<p id="welcome"></p>
+<p>After seeing who you drew, click your assigned person to mark it (anonymous).</p>
 
-<h2>Participants:</h2>
-<ul id="participantList"></ul>
+<div id="participantContainer"></div>
+<p id="assignment"></p>
 
-<button id="drawBtn">PINDUTIN MO AKO BEYBE</button>
-
-<!-- MODAL -->
 <div id="modal">
-    <div id="modalContent">
-        <h2>Enter your name and password</h2>
-        <input type="text" id="nameInput" placeholder="Enter your name (exact spelling)">
-        <input type="password" id="passwordInput" placeholder="Enter your password">
-        <button id="submitName">Submit</button>
-        <p id="error"></p>
-        <p id="result"></p>
-    </div>
+  <div id="modalContent">
+    <h2>Login</h2>
+    <input type="text" id="nameInput" placeholder="Enter your name (exact spelling)">
+    <input type="password" id="passwordInput" placeholder="Enter your password">
+    <button id="submitName">Submit</button>
+    <p id="error"></p>
+  </div>
 </div>
 
 <script>
-/* ========== PARTICIPANTS & PASSWORDS ========== */
+// Participants, credentials, and assignments
 const participants = ["RIANA","ROXANNE","AIRHA","KISHIA","CAMILLE","KAE","KRISTINA","BRICKS"];
-
 const credentials = {
-    "RIANA": "r123",
-    "ROXANNE": "roxpass",
-    "AIRHA": "a1rha",
-    "KISHIA": "kishi@",
-    "CAMILLE": "camepw",
-    "KAE": "okaeee",
-    "KRISTINA": "mossing",
-    "BRICKS": "brikoy"
+    "RIANA": "r123", "ROXANNE": "roxpass", "AIRHA": "a1rha", 
+    "KISHIA": "kishi@", "CAMILLE": "camepw", "KAE": "okaeee", 
+    "KRISTINA": "mossing", "BRICKS": "brikoy"
 };
-
-/* ========== FIXED ASSIGNMENTS (HARD-CODED) ========== */
-/* These assignments are final and identical on every device that opens this file */
 const assignments = {
-    "RIANA": "CAMILLE",
-    "CAMILLE": "KRISTINA",
-    "KISHIA": "RIANA",
-    "KRISTINA": "BRICKS",
-    "BRICKS": "ROXANNE",
-    "ROXANNE": "AIRHA",
-    "AIRHA": "KAE",
-    "KAE": "KISHIA"
+    "RIANA": "CAMILLE", "CAMILLE": "KRISTINA", "KISHIA": "RIANA",
+    "KRISTINA": "BRICKS", "BRICKS": "ROXANNE", "ROXANNE": "AIRHA",
+    "AIRHA": "KAE", "KAE": "KISHIA"
 };
 
-/* ========== PER-DEVICE USED LOCK ========== */
-/* Keeps track of who already revealed on this device (stored in localStorage) */
-let used = JSON.parse(localStorage.getItem("used")) || {}; // e.g., { "RIANA": true }
+let loggedInUser = null;
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbytDu3UioUrULTKmC6yRLAKhRwWTSgmhynduahqKC6Xb6DsGZt9_qaIsCYWSKNwl9Z2/exec"; // replace with your deployed Google Script URL
+const buttons = {};
 
-/* Save used state if changed */
-function saveUsed() {
-    localStorage.setItem("used", JSON.stringify(used));
-}
-
-/* ========== UI POPULATION ========== */
-const list = document.getElementById("participantList");
+// Create buttons
+const container = document.getElementById("participantContainer");
 participants.forEach(p => {
-    const li = document.createElement("li");
-    li.textContent = p;
-    list.appendChild(li);
+    const btn = document.createElement("button");
+    btn.className = "participant-btn";
+    btn.textContent = p;
+    btn.dataset.name = p;
+    buttons[p] = btn;
+
+    btn.addEventListener("click", async () => {
+        if (!loggedInUser) { alert("Please log in first."); return; }
+        if (btn.disabled) { alert("This person has already been chosen."); return; }
+        if (assignments[loggedInUser] !== p) { alert("This is not your assigned person."); return; }
+
+        // Mark locally
+        btn.classList.add("chosen");
+        btn.disabled = true;
+
+        // Send to Google Sheet
+        try {
+            const res = await fetch(SHEET_API_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({assignedPerson: p, chosenBy: loggedInUser})
+            });
+            const data = await res.json();
+            if(data.success) {
+                alert(`${p} is now marked as chosen (anonymous).`);
+                fetchChosenStatus();
+            }
+        } catch(err) {
+            alert("Someone else may have picked this already.");
+        }
+    });
+
+    container.appendChild(btn);
 });
 
+// Login modal logic
 const modal = document.getElementById("modal");
-const drawBtn = document.getElementById("drawBtn");
-const submitBtn = document.getElementById("submitName");
 const nameInput = document.getElementById("nameInput");
 const passwordInput = document.getElementById("passwordInput");
+const submitBtn = document.getElementById("submitName");
 const errorText = document.getElementById("error");
-const resultText = document.getElementById("result");
+const assignmentText = document.getElementById("assignment");
+const welcomeText = document.getElementById("welcome");
 
-drawBtn.onclick = () => {
-    modal.style.display = "flex";
-    errorText.textContent = "";
-    resultText.textContent = "";
-    nameInput.disabled = false;
-    passwordInput.disabled = false;
-    submitBtn.disabled = false;
-    nameInput.value = "";
-    passwordInput.value = "";
-    nameInput.focus();
-};
-
-submitBtn.onclick = () => {
-    const nameRaw = nameInput.value.trim();
-    const name = nameRaw.toUpperCase();
-    errorText.textContent = "";
-    resultText.textContent = "";
-
-    if (!nameRaw) {
-        errorText.textContent = "Lagay mo lang name mo - complete ah, kagaya ng asa screen";
-        return;
-    }
-    if (!participants.includes(name)) {
-        errorText.textContent = "Invalid name. spelling mo mali";
-        return;
-    }
-    if (used[name]) {
-        errorText.textContent = "TAMA NA";
-        return;
-    }
+submitBtn.onclick = loginUser;
+function loginUser() {
+    const nameRaw = nameInput.value.trim().toUpperCase();
     const pass = passwordInput.value;
-    if (!pass) {
-        errorText.textContent = "Please your password.";
-        return;
-    }
-    if (!credentials[name] || credentials[name] !== pass) {
-        errorText.textContent = "Invalid password.";
-        return;
-    }
+    errorText.textContent = "";
 
-    // Show the hard-coded result
-    resultText.textContent = "🎁 ANG BIBIGYAN MO AY SI ----  " + assignments[name];
+    if (!nameRaw) return errorText.textContent = "Please enter your name.";
+    if (!participants.includes(nameRaw)) return errorText.textContent = "Invalid name.";
+    if (!pass) return errorText.textContent = "Please enter your password.";
+    if (credentials[nameRaw] !== pass) return errorText.textContent = "Invalid password.";
 
-    // Mark as used (on THIS device)
-    used[name] = true;
-    saveUsed();
+    loggedInUser = nameRaw;
+    modal.style.display = "none";
+    welcomeText.textContent = `Logged in as: ${loggedInUser}`;
+    assignmentText.textContent = `🎁 Ang maswerteng nabunot mo ay si: ${assignments[loggedInUser]}`;
 
-    // Disable inputs on success
-    nameInput.disabled = true;
-    passwordInput.disabled = true;
-    submitBtn.disabled = true;
+    fetchChosenStatus();
+}
 
-    // Close modal shortly
-    setTimeout(() => { modal.style.display = "none"; }, 2000);
-};
+// Close modal when clicking outside
+modal.addEventListener('click', e => { if(e.target === modal) modal.style.display='none'; });
 
-// Close modal if clicked outside content
-modal.addEventListener('click', (e) => {
-    if (e.target === modal) modal.style.display = 'none';
-});
+// Enter key support
+nameInput.addEventListener('keypress', e => { if(e.key==='Enter') passwordInput.focus(); });
+passwordInput.addEventListener('keypress', e => { if(e.key==='Enter') loginUser(); });
 
-// Enter key convenience
-nameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') passwordInput.focus(); });
-passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') submitBtn.click(); });
-
+// Fetch chosen status
+async function fetchChosenStatus() {
+    try {
+        const res = await fetch(SHEET_API_URL);
+        const data = await res.json();
+        data.forEach(item => {
+            if (!item.chosenBy) return; // skip unchosen
+            const btn = buttons[item.assigned];
+            if (!btn) return;
+            // Disable only if someone else picked it
+            if (item.chosenBy !== loggedInUser) {
+                btn.classList.add("chosen");
+                btn.disabled = true;
+            }
+        });
+    } catch(err) { console.log("Error fetching chosen status", err); }
+}
 </script>
+
 </body>
 </html>
-
-
